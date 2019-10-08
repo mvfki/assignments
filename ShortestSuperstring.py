@@ -41,7 +41,6 @@ class Assemble(object):
     
     def getCandidates(self, node):
         kmers = self.seq2kmer[node]
-        #print(kmers)
         candidates = set()
         for kmer, pos in kmers:
             for node2, pos in self.kmer2seq[kmer]:
@@ -61,10 +60,8 @@ class Assemble(object):
         self.undirectedGraph = defaultdict(set)
         for node in range(len(self.seqCollection)):
             candidates = self.getCandidates(node)
-            #print(node, candidates)
             for node2 in candidates:
                 ovlp = self.fixOverlap(node, node2)
-                #print('ovlp', ovlp[2])
                 if ovlp and ovlp[2] >= len(self.seqCollection[node])/2 and ovlp[2] >= len(self.seqCollection[node2])/2:
                     if ovlp[0] == 1:
                         assert (node2, node) not in self.directedGraph
@@ -76,13 +73,15 @@ class Assemble(object):
                         self.directedGraph[(node2, node)] = ovlp[2]
                         self.undirectedGraph[node].add(node2)
                         self.undirectedGraph[node2].add(node)
-
+        # Here find the end of the graph by searching for the nodes that has 
+        # only one neighbor node.
         ends = []
         for src, tgt in self.undirectedGraph.items():
             if len(tgt) == 1:
                 ends.append(src)
         assert len(ends) == 2
-
+        # Here from the two ends determine the starting end, based on the 
+        # assumptions above.
         read1 = ends[0]
         candidates = self.getCandidates(read1)
         read1Next = list(candidates)[0]
@@ -101,13 +100,10 @@ class Assemble(object):
         if seq1Pref[0] in seq2Kmers:
             for n, pos in self.kmer2seq[seq1Pref[0]]:
                 if n == node2:
-                    #print(node2, 'to', node1)
                     return (2, 1, len(self.seqCollection[node2]) - pos)
         elif seq1Suff[0] in seq2Kmers:
-            # I'll assume that it's in seq2's prefix
             for n, pos in self.kmer2seq[seq1Suff[0]]:
                 if n == node2:
-                    #print(node1, 'to', node2)
                     return (1, 2, pos + len(seq1Suff[0]))
         else:
             print('Didn\'t find matching k-mer in', node1, node2)
@@ -123,7 +119,6 @@ class Assemble(object):
                 passed.add(node)
                 nextNode = list(self.undirectedGraph[node].difference(passed))[0]
                 ovlpLen = self.directedGraph[(node, nextNode)]
-                #print(node, nextNode, ovlpLen)
                 self.asm += self.seqCollection[node][:len(self.seqCollection[node]) - ovlpLen]
                 node = nextNode
             except IndexError:
@@ -135,22 +130,6 @@ class Assemble(object):
     def __str__(self):
         return self.asm
 
-def assemble(graph, undirGraph, start, seqCollection):
-    asm = ''
-    passed = {start}
-    node = start
-    while True:
-        try:
-            passed.add(node)
-            nextNode = list(undirGraph[node].difference(passed))[0]
-            ovlpLen = graph[(node, nextNode)]
-            asm += seqCollection[node][:len(seqCollection[node]) - ovlpLen]
-            node = nextNode
-        except IndexError:
-            asm += seqCollection[node]
-            break
-    return asm
-
 def main():
     # These are test small cases given on the Rosalind problem page
     X = "ATTAGACCTG"
@@ -158,6 +137,7 @@ def main():
     Z = 'AGACCTGCCG'
     W = 'GCCGGAATAC'
     readlist = [W, X, Y, Z]
+    # rosalind_long.fasta is at example/ folder
     #readlist = [str(record.seq) for record in SeqIO.parse("rosalind_long.fasta", "fasta")]
     asm = Assemble(readlist)
     print(asm)
