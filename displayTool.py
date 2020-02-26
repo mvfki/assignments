@@ -1,5 +1,4 @@
 import sys
-import copy
 
 class progressBar():
     """
@@ -404,12 +403,6 @@ class cstr(str):
             outList.append(cstr(self.str[lastSplit:len(self.str)], 
                                 self.color[lastSplit:len(self.str)]))
         return outList
-
-    def __contains__(self, key):
-        return key in str.__str__(self)
-
-
-
 
 if __name__=='__main__':
     maxSteps = 5000
