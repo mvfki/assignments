@@ -3,8 +3,6 @@
 @author: Yichen Wang
 @date: 06/30/2020
 """
-
-# Let's start write some thing simple
 import matplotlib.pyplot as plt
 from matplotlib import cm, colors
 import numpy as np
